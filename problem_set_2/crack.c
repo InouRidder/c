@@ -2,16 +2,15 @@
 #include <stdio.h>
 #define _XOPEN_SOURCE
 #include <unistd.h>
-           "aabac"
+#include <string.h>
 
 int string_length(char * element);
+char next_letter();
 char head = 0;
-char * alphabet;
-
-// In a letter of three
-// Start with letter 1
-// start with the last letter iterating through all the possible variations.
-// Then when the last letter has gone through all permutations, switch the head by 1 index and go through all prior permutations again.
+// Assuming there is only alphabetical characters, but it can go for any length / variation
+char alphabet[53] = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+int x_position = 0;
+int y_position = 0;
 
 int main(int argc, string argv[])
 {
@@ -19,27 +18,45 @@ int main(int argc, string argv[])
     printf("Please only a hash to decode \n");
     return 1;
   }
-  // the passed hash to crack is in saved in the hash variable
-  // char * passed_hash = argv[1];
-  // We want to guess what the SALT is. If we know the SALT we can match hashes based on words that we pass through the hash function (crypt) with the salt that is the code for encoding
-  // sa3tHJ3/KuYvI
-  char * hash_to_match = argv[1]
+  char * hash_to_match = argv[1];
   char * salt = "50cs";
   char * result_hash;
+  int end_of_chars = 0;
+  int hash_is_matched = 0;
 
-  char string[5];
+  char guess[5];
   do {
-    string = next_word(string);
-    char * result_hash = crypt(string, salt);
 
+    char letter = next_letter();
+    if (strcmp(&letter, "\0") != 0) {
+      guess[x_position] = letter;
+      if (x_position > 0) {
+        x_position--;
+      }
+    } else {
+      guess[y_position] = ' ';
+      x_position++;
+      if (x_position > 5) {
+        end_of_chars = 1;
+      }
+    }
+    char * result_hash = crypt(guess, salt);
+    if (strcmp(hash_to_match, result_hash) != 0) {
+      hash_is_matched = 1;
+    }
 
-  } while (strcmp(hash_to_match, result_hash) != 0);
+  } while (end_of_chars != 1 || hash_is_matched != 1);
 
-  printf("%s \n", tried_hash);
+  if (hash_is_matched == 1) {
+    printf("MATCHED: %s \n PASSWORD: %s \n", result_hash, guess);
+  } else {
+    printf("Did not match \n");
+  }
 }
 
-char * next_word(char * string) {
-
+char next_letter() {
+  char let = alphabet[y_position++];
+  return let;
 }
 
 int string_length(char * element) {
@@ -49,54 +66,6 @@ int string_length(char * element) {
   } while(strcmp(&element[count], "\0") != 0);
   return count;
 }
-// ALPHA = ("a".."z").to_a.insert(0, " ")
-// password = ARGV[0]
-// string = ""
-// password.length.times { string << " " }
-
-// array = string.split("")
-// head = 0
-
-// def success(count, word)
-//   puts "Found it! It took #{count} tries and the word is #{word}"
-// end
-
-// def next_letter_in_alphabet(letter)
-//   next_index = ALPHA.index(letter) + 1
-//   ALPHA[next_index]
-// end
-
-// count = 0
-// found  = false
-// length = password.length - 1
-
-// while !found
-//   count += 1
-//   if string == password
-//     found = true
-//     success(count, string)
-//     break
-//   end
-//   next_letter = next_letter_in_alphabet(string[head])
-//   # need to keep track of y index as well as x index...
-//   if next_letter
-//     string[head] = next_letter
-//     head -= 1 if head > 0
-//   else
-//     string[head] = ' '
-//     head += 1
-//     break if head > length
-//   end
-//   # puts string
-// end
-
-// puts count
-// puts "Didnt find it" unless found
-
-
-
-
-
 
 // The Shadow Knows
 // On most systems running Linux these days is a file called /etc/shadow that contains usernames and passwords. Fortunately, the passwords therein aren’t stored “in the clear” but are instead encrypted using a “one-way hash function.” When a user logs into these systems by typing a username and password, the latter is encrypted with the very same hash function, and the result is compared against the username’s entry in /etc/shadow. If the two hashes match, the user is allowed in. If you’ve ever forgotten some password, you might have been told that tech support can’t look up your password but can change it for you. Odds are that’s because tech support can only see, if anything at all, a hash of your password, not your password itself. But they can create a new hash for you.
